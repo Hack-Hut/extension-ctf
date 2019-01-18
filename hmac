@@ -1,0 +1,83 @@
+import socket
+import base64
+
+PORT = 24657
+KEY = "aasd"
+KEY = KEY.lower()
+
+
+
+def hash(m):
+    print("Message:\t" + m)
+    print("Key:\t\t" + KEY)
+    # -----------------------
+    lk = len(KEY)
+    m = padding(lk, m)
+    lm = len(m)
+    iv = "A" * len(KEY)
+    p_block = False
+    # -----------------------
+    for b in range(0, lm, lk):
+        block = m[b:b+lk]
+        if b == 0:
+            p_block = compression(iv, block)
+        elif p_block != False:
+            p_block = compression(p_block, block)
+        else:
+            return False
+
+    d = compression(p_block, KEY)
+    print("-" * 100)
+    digest = ""
+    print("digest")
+
+    print("-" * 100)
+    for x in range(0, len(d)):
+        digest += d[x]
+    print(digest)
+    encoded = base64.b64encode(digest.encode()).decode()
+    print(encoded)
+    print(base64.b64decode(encoded).decode())
+    return encoded
+
+def hmac(hash, message):
+    return (hash + " | " + message)
+
+def compression(b, pb):
+    b = str(b)
+    pb = str(pb)
+    d = [ord(a) & ord(b) for a, b in zip(str(b), str(pb))]
+    nd = []
+    nv = ""
+    for x in range(0, len(d)):
+        nd.append((d[x] ^ ord(b[x])) ^ (d[x] ^ ord(pb[x])))
+    for x in range(0, len(nd)):
+        nv += chr(nd[x])
+    # for x in range(0, len(d)):
+    #     nv += chr(d[x])
+    return nv
+
+
+def padding(lk, m):
+    while len(m) % lk != 0:
+        m = m + "0"
+    return m
+
+
+
+
+def main():
+    command_list = ["Display_password", "Display_the_time"]
+    message = "Display_password"
+    #hash(message)
+
+    send = hmac(hash(message), message)
+    input(send)
+    if hash(send.split("|")[1].strip()) == hash(message):
+        print("verified")
+    else:
+        print("failed")
+
+main()
+
+
